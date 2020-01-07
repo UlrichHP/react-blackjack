@@ -33,6 +33,7 @@ button {
     margin: 0 auto;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
 }
 .card {
     height: 150px;
@@ -42,7 +43,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0 5px;
+    margin: 5px;
 }
 
 .result {

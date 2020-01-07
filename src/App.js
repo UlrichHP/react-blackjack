@@ -13,6 +13,7 @@ class App extends Component {
             player: [],
             playerCount: 0,
             dealerCount: 0,
+            dealerTurn: false,
             gameOver: false,
             message: null
         };
@@ -105,9 +106,10 @@ class App extends Component {
 
     stand() {
         if (!this.state.gameOver) {
+            this.setState({ dealerTurn: false });
             const dealer = [...this.state.dealer];
 
-            if (this.state.dealerCount > this.state.playerCount) {
+            if (this.state.dealerCount >= this.state.playerCount) {
                 this.setState({ gameOver: true, message: 'La banque gagne...' });
             } else {
                 axios
@@ -120,6 +122,8 @@ class App extends Component {
 
                         if (this.state.dealerCount > 21) {
                             this.setState({ gameOver: true, message: 'La banque a perdu ! Bravo !' });
+                        } else if (this.state.dealerCount < this.state.playerCount) {
+                            this.setState({ dealerTurn: true });
                         } else {
                             const winner = this.getWinner(this.state.dealerCount, this.state.playerCount);
                             let message;
@@ -130,16 +134,10 @@ class App extends Component {
                                 message = 'Victoire!';
                             }
                             
-                            this.setState({
-                                dealer,
-                                gameOver: true,
-                                message
-                            });
+                            this.setState({ dealer, gameOver: true, message });
                         }
                     });
             }
-
-
         } else {
             this.setState({ message: 'Partie terminée !' });
         }
@@ -158,6 +156,12 @@ class App extends Component {
     componentDidMount = () => {
         this.startNewGame()
     };
+
+    componentDidUpdate() {
+        if(this.state.dealerTurn) {
+            this.stand();
+        }
+    }
 
     render() {
         return (
