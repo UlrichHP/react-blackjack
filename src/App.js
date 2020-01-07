@@ -23,7 +23,7 @@ class App extends Component {
             .get('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1')
             .then(response => {
                 const deck_id = response.data.deck_id;
-                this.setState({deck_id}, this.giveStartCards);
+                this.setState({deck_id, gameOver: false, message: null}, this.giveStartCards);
             });
     }
 
@@ -33,14 +33,14 @@ class App extends Component {
             .then(response => {      
                 const player = response.data.cards;
                 this.setState({ player });
-                this.getCount("player");
+                this.getCount('player');
             });
         axios
             .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=2`)
             .then(response => {      
                 const dealer = response.data.cards;
                 this.setState({ dealer });
-                this.getCount("dealer");
+                this.getCount('dealer');
             });
     }
 
@@ -49,7 +49,7 @@ class App extends Component {
         let cards = [];
         let totalCount = 0;
 
-        if (type === "player") {
+        if (type === 'player') {
             cards = [...this.state.player];
             totalCount = this.state.playerCount;
         } else {
@@ -75,10 +75,79 @@ class App extends Component {
             }
         }, 0);
         
-        if (type === "player") {
+        if (type === 'player') {
             this.setState({ playerCount: totalCount });
         } else {
             this.setState({ dealerCount: totalCount });
+        }
+    }
+
+    hit() {
+        if (!this.state.gameOver) {
+            const player = [...this.state.player];
+
+            axios
+                .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
+                .then(response => {      
+                    player.push(response.data.cards[0]);
+
+                    this.setState({ player });
+                    this.getCount('player');
+
+                    if (this.state.playerCount > 21) {
+                        this.setState({ gameOver: true, message: 'Perdu...' });
+                    }
+                });
+        } else {
+            this.setState({ message: 'Partie terminée !' });
+        }
+    }
+
+    stand() {
+        if (!this.state.gameOver) {
+            const dealer = [...this.state.dealer];
+
+            axios
+                .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
+                .then(response => {      
+                    dealer.push(response.data.cards[0]);
+
+                    this.setState({ dealer });
+                    this.getCount('dealer');
+
+                    if (this.state.dealerCount > 21) {
+                        this.setState({ gameOver: true, message: 'La banque a perdu ! Bravo !' });
+                    } else {
+                        const winner = this.getWinner(this.state.dealerCount, this.state.playerCount);
+                        let message;
+                        
+                        if (winner === 'dealer') {
+                            message = 'La banque gagne...';
+                        } else if (winner === 'player') {
+                            message = 'Victoire!';
+                        }
+                        
+                        this.setState({
+                            dealer,
+                            gameOver: true,
+                            message
+                        });
+                    }
+                });
+
+
+        } else {
+            this.setState({ message: 'Partie terminée !' });
+        }
+    }
+
+    getWinner(dealer, player) {
+        if (dealer > player) {
+            return 'dealer';
+        } else if (dealer === player) {
+            return 'dealer';
+        } else if (dealer < player) {
+            return 'player';
         }
     }
 
