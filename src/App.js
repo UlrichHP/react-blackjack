@@ -107,33 +107,37 @@ class App extends Component {
         if (!this.state.gameOver) {
             const dealer = [...this.state.dealer];
 
-            axios
-                .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
-                .then(response => {      
-                    dealer.push(response.data.cards[0]);
+            if (this.state.dealerCount > this.state.playerCount) {
+                this.setState({ gameOver: true, message: 'La banque gagne...' });
+            } else {
+                axios
+                    .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
+                    .then(response => {      
+                        dealer.push(response.data.cards[0]);
 
-                    this.setState({ dealer });
-                    this.getCount('dealer');
+                        this.setState({ dealer });
+                        this.getCount('dealer');
 
-                    if (this.state.dealerCount > 21) {
-                        this.setState({ gameOver: true, message: 'La banque a perdu ! Bravo !' });
-                    } else {
-                        const winner = this.getWinner(this.state.dealerCount, this.state.playerCount);
-                        let message;
-                        
-                        if (winner === 'dealer') {
-                            message = 'La banque gagne...';
-                        } else if (winner === 'player') {
-                            message = 'Victoire!';
+                        if (this.state.dealerCount > 21) {
+                            this.setState({ gameOver: true, message: 'La banque a perdu ! Bravo !' });
+                        } else {
+                            const winner = this.getWinner(this.state.dealerCount, this.state.playerCount);
+                            let message;
+                            
+                            if (winner === 'dealer') {
+                                message = 'La banque gagne...';
+                            } else if (winner === 'player') {
+                                message = 'Victoire!';
+                            }
+                            
+                            this.setState({
+                                dealer,
+                                gameOver: true,
+                                message
+                            });
                         }
-                        
-                        this.setState({
-                            dealer,
-                            gameOver: true,
-                            message
-                        });
-                    }
-                });
+                    });
+            }
 
 
         } else {
