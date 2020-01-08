@@ -37,7 +37,7 @@ class App extends Component {
                 this.getCount('player');
             });
         axios
-            .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=2`)
+            .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
             .then(response => {      
                 const dealer = response.data.cards;
                 this.setState({ dealer });
@@ -183,7 +183,7 @@ class App extends Component {
                     </div>
                 
                     <p>Joueur ({ this.state.playerCount })</p>
-                    <div className="cards">
+                    <div className="cards player">
                         { this.state.player.map(card => (
                             <Card key={card.code} 
                                 image={card.image} 
@@ -192,12 +192,15 @@ class App extends Component {
                     </div>
                     
                     <p>Banque ({ this.state.dealerCount })</p>
-                    <div className="cards">
+                    <div className="cards dealer">
                         { this.state.dealer.map(card => (
                             <Card key={card.code} 
                                 image={card.image} 
                                 code={card.code} />
                         ))}
+                        {
+                            this.state.dealer.length === 1 ? <div className="card"></div> : ''
+                        }
                     </div>
                 </div>
             </React.Fragment>

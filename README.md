@@ -7,6 +7,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 * Continue a game with the same deck.
 * Make bets and win/lose virtual money.
 * Rework design.
+* Add Tests.
 
 ## Available Scripts
 

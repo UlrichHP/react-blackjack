@@ -21,6 +21,10 @@ button {
     color: white;
     margin: 0 10px 0 10px;
     padding: 5px 10px;
+    transition: opacity .3s;
+}
+button:hover {
+    opacity: .5;
 }
 .hit {
     background-color: darkred;
@@ -35,6 +39,17 @@ button {
     justify-content: center;
     flex-wrap: wrap;
 }
+.dealer .card:nth-child(2) {
+    height: 150px;
+    width: 100px;
+    background-color: navajowhite;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+    z-index: 15;
+}
 .card {
     height: 150px;
     width: 100px;
@@ -44,6 +59,7 @@ button {
     justify-content: center;
     align-items: center;
     margin: 5px;
+    animation: cardopacity 1s;
 }
 
 .result {
@@ -53,4 +69,9 @@ button {
     padding: 15px;
     width: 50%;
     margin: 40px auto;
+}
+
+@keyframes cardopacity {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
