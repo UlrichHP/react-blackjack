@@ -1,61 +1,54 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import './App.css';
+import './App.css'
 import Card from './Card'
 
-class App extends Component {
-    constructor(props) {
-        super(props);
+const App = () => {
+    const [deck_id, setDeckId] = useState('');
+    const [player, setPlayer] = useState([]);
+    const [dealer, setDealer] = useState([]);
+    const [playerCount, setPlayerCount] = useState(0);
+    const [dealerCount, setDealerCount] = useState(0);
+    const [dealerTurn, setDealerTurn] = useState(false);
+    const [gameOver, setGameOver] = useState(false);
+    const [message, setMessage] = useState(null);
 
-        this.state = {
-            deck_id: '',
-            dealer: [],
-            player: [],
-            playerCount: 0,
-            dealerCount: 0,
-            dealerTurn: false,
-            gameOver: false,
-            message: null
-        };
-    }
-
-    startNewGame() {
+    const startNewGame = () => {
         axios
             .get('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1')
             .then(response => {
-                const deck_id = response.data.deck_id;
-                this.setState({deck_id, gameOver: false, message: null}, this.giveStartCards);
+                setDeckId(response.data.deck_id);
             });
-    }
 
-    giveStartCards = () => {
-        axios
-            .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=2`)
-            .then(response => {      
-                const player = response.data.cards;
-                this.setState({ player });
-                this.getCount('player');
-            });
-        axios
-            .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
-            .then(response => {      
-                const dealer = response.data.cards;
-                this.setState({ dealer });
-                this.getCount('dealer');
-            });
-    }
+        setDealerTurn(false);
+        setGameOver(false);
+        setMessage(null);
+    };
 
-    getCount(type) {
+    const giveStartCards = () => {
+        axios
+            .get(`https://deckofcardsapi.com/api/deck/${ deck_id }/draw/?count=2`)
+            .then(response => {
+                setPlayer(response.data.cards);
+            });
+        axios
+            .get(`https://deckofcardsapi.com/api/deck/${ deck_id }/draw/?count=1`)
+            .then(response => {
+                setDealer(response.data.cards);
+            });
+    };
+
+    const getCount = (type) => {
         const count = [];
         let cards = [];
         let totalCount = 0;
 
         if (type === 'player') {
-            cards = [...this.state.player];
-            totalCount = this.state.playerCount;
+            cards = [...player];
+            totalCount = playerCount;
         } else {
-            cards = [...this.state.dealer];
-            totalCount = this.state.dealerCount;
+            cards = [...dealer];
+            totalCount = dealerCount;
         }
         
         cards.forEach(card => {
@@ -77,135 +70,118 @@ class App extends Component {
         }, 0);
         
         if (type === 'player') {
-            this.setState({ playerCount: totalCount });
+            setPlayerCount(totalCount);
         } else {
-            this.setState({ dealerCount: totalCount });
+            setDealerCount(totalCount);
         }
-    }
-
-    hit() {
-        if (!this.state.gameOver) {
-            const player = [...this.state.player];
-
-            axios
-                .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
-                .then(response => {      
-                    player.push(response.data.cards[0]);
-
-                    this.setState({ player });
-                    this.getCount('player');
-
-                    if (this.state.playerCount > 21) {
-                        this.setState({ gameOver: true, message: 'Perdu...' });
-                    }
-                });
-        } else {
-            this.setState({ message: 'Partie terminée !' });
-        }
-    }
-
-    stand() {
-        if (!this.state.gameOver) {
-            this.setState({ dealerTurn: false });
-            const dealer = [...this.state.dealer];
-
-            if (this.state.dealerCount >= this.state.playerCount) {
-                this.setState({ gameOver: true, message: 'La banque gagne...' });
-            } else {
-                axios
-                    .get(`https://deckofcardsapi.com/api/deck/${ this.state.deck_id }/draw/?count=1`)
-                    .then(response => {      
-                        dealer.push(response.data.cards[0]);
-
-                        this.setState({ dealer });
-                        this.getCount('dealer');
-
-                        if (this.state.dealerCount > 21) {
-                            this.setState({ gameOver: true, message: 'La banque a perdu ! Bravo !' });
-                        } else if (this.state.dealerCount < this.state.playerCount) {
-                            this.setState({ dealerTurn: true });
-                        } else {
-                            const winner = this.getWinner(this.state.dealerCount, this.state.playerCount);
-                            let message;
-                            
-                            if (winner === 'dealer') {
-                                message = 'La banque gagne...';
-                            } else if (winner === 'player') {
-                                message = 'Victoire!';
-                            }
-                            
-                            this.setState({ dealer, gameOver: true, message });
-                        }
-                    });
-            }
-        } else {
-            this.setState({ message: 'Partie terminée !' });
-        }
-    }
-
-    getWinner(dealer, player) {
-        if (dealer > player) {
-            return 'dealer';
-        } else if (dealer === player) {
-            return 'dealer';
-        } else if (dealer < player) {
-            return 'player';
-        }
-    }
-
-    componentDidMount = () => {
-        this.startNewGame()
+        cards = [];
+        totalCount = 0;
     };
 
-    componentDidUpdate() {
-        if(this.state.dealerTurn) {
-            this.stand();
+    const hit = () => {
+        if (!gameOver) {
+            const updatedPlayer = [...player];
+
+            axios
+                .get(`https://deckofcardsapi.com/api/deck/${ deck_id }/draw/?count=1`)
+                .then(response => {      
+                    updatedPlayer.push(response.data.cards[0]);
+                    setPlayer(updatedPlayer);
+                });
+        } else {
+            setMessage('Partie terminée !');
         }
-    }
+    };
 
-    render() {
-        return (
-            <React.Fragment>
-                <h1>Blackjack</h1>
-                <div id="main">
-                    {
-                        this.state.message !== null 
-                        ?
-                            <p className="result">{ this.state.message }</p>
-                        : 
-                            ''
-                    }
+    const stand = () => {
+        if (!gameOver) {
+            setDealerTurn(false);
+            const updatedDealer = [...dealer];
 
-                    <div className="buttons">
-                        <button onClick={() => {this.startNewGame()}}>Nouvelle Partie</button>
-                        <button className="hit" onClick={() => {this.hit()}}>Tirer</button>
-                        <button className="stand" onClick={() => {this.stand()}}>Laisser</button>
-                    </div>
-                
-                    <p>Joueur ({ this.state.playerCount })</p>
-                    <div className="cards player">
-                        { this.state.player.map(card => (
-                            <Card key={card.code} 
-                                image={card.image} 
-                                code={card.code} />
-                        ))}
-                    </div>
-                    
-                    <p>Banque ({ this.state.dealerCount })</p>
-                    <div className="cards dealer">
-                        { this.state.dealer.map(card => (
-                            <Card key={card.code} 
-                                image={card.image} 
-                                code={card.code} />
-                        ))}
-                        {
-                            this.state.dealer.length === 1 ? <div className="card"></div> : ''
-                        }
-                    </div>
+            axios
+                .get(`https://deckofcardsapi.com/api/deck/${ deck_id }/draw/?count=1`)
+                .then(response => {      
+                    updatedDealer.push(response.data.cards[0]);
+                    setDealer(updatedDealer);
+                    setDealerTurn(true);
+                });
+        } else {
+            setMessage('Partie terminée !');
+        }
+    };
+
+    useEffect(() => {
+        startNewGame();
+    }, []);
+
+    useEffect(() => {
+        if (deck_id.length > 1)
+            giveStartCards();
+    }, [deck_id]);
+
+    useEffect(() => {
+        getCount('player');
+        getCount('dealer');
+    });
+
+    useEffect(() => {
+        if (playerCount > 21) {
+            setGameOver(true);
+            setMessage('Perdu...');
+        } else if (dealerCount > 21) {
+            setDealerTurn(false);
+            setGameOver(true);
+            setMessage('La banque a perdu ! Bravo !');
+        } else if (dealerCount >= playerCount && dealerTurn) {
+            setDealerTurn(false);
+            setGameOver(true);
+            setMessage('La banque gagne...');
+        } else if (dealerTurn) {
+            stand(); // Draw another card
+        }
+    }, [dealerTurn, dealerCount, playerCount]);
+
+    return (
+        <React.Fragment>
+            <h1>Blackjack</h1>
+            <div id="main">
+                {
+                    message !== null 
+                    ?
+                        <p className="result">{ message }</p>
+                    : 
+                        ''
+                }
+
+                <div className="buttons">
+                    <button onClick={startNewGame}>Nouvelle Partie</button>
+                    <button className="hit" onClick={hit}>Tirer</button>
+                    <button className="stand" onClick={stand}>Laisser</button>
                 </div>
-            </React.Fragment>
-        );
-    }
+            
+                <p>Joueur ({ playerCount })</p>
+                <div className="cards player">
+                    { player.map(card => (
+                        <Card key={card.code} 
+                            image={card.image} 
+                            code={card.code} />
+                    ))}
+                </div>
+                
+                <p>Banque ({ dealerCount })</p>
+                <div className="cards dealer">
+                    { dealer.map(card => (
+                        <Card key={card.code} 
+                            image={card.image} 
+                            code={card.code} />
+                    ))}
+                    {
+                        dealer.length === 1 ? <div className="card"></div> : ''
+                    }
+                </div>
+            </div>
+        </React.Fragment>
+    );
 };
 
 export default App
